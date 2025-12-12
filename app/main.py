@@ -1,7 +1,10 @@
 from enum import Enum
+from io import BytesIO
 from typing import BinaryIO, Callable
 
 import tabula
+from borb import pdf
+from borb.pdf.layout_element.table.table_util import TableUtil
 from docx import Document
 from fastapi import FastAPI, Response, UploadFile
 from odf.opendocument import load
@@ -16,6 +19,7 @@ class Formats(Enum):
     CSV = "csv"
     XML = "xml"
     JSON = "json"
+    PDF = "pdf"
 
 
 class ValidExtensions(Enum):
@@ -28,10 +32,36 @@ class ValidExtensions(Enum):
     ODT = "odt"
 
 
+def to_pdf(df: DataFrame) -> Response:
+    _pdf = pdf.Document()
+
+    page = pdf.Page()
+    _pdf.append_page(page)
+
+    layout = pdf.SingleColumnLayout(page)
+
+    tabular = []
+    tabular.append(df.keys().tolist())
+    for row in df.values.tolist():
+        tabular.append(row)
+
+    table = TableUtil.from_2d_data(tabular)
+
+    layout.append_layout_element(table)
+    buffered = BytesIO()
+    pdf.PDF.write(_pdf, buffered)
+    return Response(
+        content=buffered.getvalue(),
+        headers={"content-disposition": "attachment; filename=result.pdf"},
+        media_type="application/pdf",
+    )
+
+
 FUNCTIONS: dict[Formats, Callable[[DataFrame], Response]] = {
     Formats.CSV: lambda df: Response(content=df.to_csv(index=False), media_type="text/csv"),
     Formats.JSON: lambda df: Response(content=df.to_json(orient="records"), media_type="application/json"),
     Formats.XML: lambda df: Response(content=df.to_xml(index=False), media_type="application/xml"),
+    Formats.PDF: to_pdf,
 }
 
 
