@@ -8,3 +8,6 @@ dynamic = ["dependencies"]
 
 [tool.setuptools.dynamic.dependencies]
 file = "requirements.txt"
+
+[tool.ruff]
+line-length = 120
