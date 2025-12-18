@@ -1,7 +1,7 @@
 [project]
-name = "datamanager-python-tools"
+name = "nucleify-python-tools"
 version = "0.1.0"
-description = "Python tools for Data Manager"
+description = "Python tools for Nucleify"
 readme = "README.md"
 requires-python = ">=3.13"
 dynamic = ["dependencies"]
